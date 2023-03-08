@@ -46,7 +46,7 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate {
         dateComponents.hour = 10
         dateComponents.minute = 30
 //        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
 
         
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
@@ -57,9 +57,12 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate {
         let center = UNUserNotificationCenter.current()
         center.delegate = self
 
+        let remindMeLater = UNNotificationAction(identifier: "time", title: "Remind me later..", options: .foreground)
         let show = UNNotificationAction(identifier: "show", title: "Tell me more…", options: .foreground)
-        let category = UNNotificationCategory(identifier: "alarm", actions: [show], intentIdentifiers: [])
-
+        let category = UNNotificationCategory(identifier: "alarm", actions: [show, remindMeLater], intentIdentifiers: [])
+     
+        
+        
         center.setNotificationCategories([category])
     }
     
@@ -68,15 +71,24 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate {
         let userInfo = response.notification.request.content.userInfo
 
         if let customData = userInfo["customData"] as? String {
-            print("Custom data received: \(customData)")
-
+            print("Data received from: \(customData)")
+            
             switch response.actionIdentifier {
             case UNNotificationDefaultActionIdentifier:
                 print("Default identifier")
 
             case "show":
-                print("Show more information…")
-
+                let ac = UIAlertController(title: "Data", message: "Custom data received: \(customData)", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "Ok", style: .cancel))
+                
+                present(ac, animated: true)
+                
+            case "time":
+                let ac = UIAlertController(title: nil, message: "Remind you later?", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "Ok", style: .default) { [weak self] _ in self?.scheduleLocal() })
+                ac.addAction(UIAlertAction(title: "No", style: .cancel))
+                
+                present(ac, animated: true)
             default:
                 break
             }
